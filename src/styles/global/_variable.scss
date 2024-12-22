@@ -1,0 +1,21 @@
+@use "sass:math";
+
+/* breakpoint */
+$sm-width: 576px;
+$md-width: 768px;
+$xl-width: 950px;
+$large-width: 1400px;
+
+/* contents max width */
+$contents-max-width: 1240px;
+
+/* fonts */
+$font-noto: "Noto Sans JP", sans-serif;
+
+@font-face {
+    font-family: 'WorkSans_wght';
+    src: url('/fonts/WorkSans_wght.ttf');
+}
+
+$font-workSuns: 'WorkSans_wght';
+

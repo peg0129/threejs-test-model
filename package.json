@@ -1,0 +1,30 @@
+{
+  "name": "portfolio-site",
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro check && astro build",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/check": "^0.5.10",
+    "@astrojs/mdx": "^2.3.1",
+    "@astrojs/rss": "^4.0.5",
+    "@astrojs/sitemap": "^3.1.4",
+    "@pixiv/three-vrm": "^2.1.2",
+    "@pixiv/three-vrm-animation": "^2.1.2",
+    "@pixiv/three-vrm-springbone": "^2.1.2",
+    "@vercel/edge": "^1.1.1",
+    "astro": "^4.7.0",
+    "gsap": "^3.12.5",
+    "microcms-js-sdk": "^3.1.1",
+    "nanostores": "^0.10.3",
+    "sass": "^1.76.0",
+    "swiper": "^11.1.1",
+    "three": "^0.164.1",
+    "typescript": "^5.4.5"
+  }
+}

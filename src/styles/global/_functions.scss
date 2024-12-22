@@ -1,0 +1,11 @@
+@use "sass:math";
+
+// タブレット以下、リキッド値算出（％）
+@function get_parsent($numerator, $fraction: 768) {
+    @return calc(math.div($numerator, $fraction) * 100%);
+}
+
+// タブレット以下、リキッド値算出（vw）
+@function get_vw($numerator, $fraction: 768) {
+    @return calc(math.div($numerator, $fraction) * 100vw);
+}

@@ -1,0 +1,428 @@
+---
+import BaseLayout from "../layouts/baseLayout.astro";
+---
+
+<BaseLayout>
+  <style lang="scss">
+    .top {
+      overflow: hidden;
+
+      &__wrap {
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+
+        div {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          width: 85%;
+          margin: 0 auto;
+
+          @include min-md {
+            top: auto;
+            bottom: 5%;
+            left: 5%;
+            transform: translate(0%, 0%);
+          }
+        }
+      }
+
+      &__title,
+      &__subTitle {
+        display: inline-block;
+        overflow: hidden;
+
+        span {
+          display: block;
+          opacity: 1;
+          transform: translateY(100%);
+          font-variation-settings: "wght" 100;
+          font-family: "WorkSans_wght", sans-serif;
+          letter-spacing: -0.02em;
+        }
+      }
+
+      &__title span {
+        font-size: calc(250 / 1280 * 100vw);
+        animation-delay: 0.4s;
+
+        @include min-md {
+          font-size: calc(300 / 768 * 100vw);
+        }
+      }
+
+      &__subTitle span {
+        position: relative;
+        font-size: calc(90 / 1280 * 100vw);
+        animation-delay: 0.8s;
+
+        @include min-md {
+          font-size: calc(110 / 768 * 100vw);
+        }
+      }
+
+      .active {
+        animation-name: topTitle;
+        animation-duration: 0.85s;
+        animation-iteration-count: 1;
+        animation-fill-mode: forwards;
+        animation-timing-function: ease;
+      }
+
+      @keyframes topTitle {
+        0% {
+          transform: translateY(100%);
+          font-variation-settings: "wght" 100;
+        }
+        40% {
+          transform: translateY(0%);
+          font-variation-settings: "wght" 100;
+        }
+        100% {
+          transform: translateY(0%);
+          font-variation-settings: "wght" 800;
+        }
+      }
+    }
+  </style>
+
+  <section class="top" id="top">
+    <div class="top__wrap">
+      <div>
+        <h1 class="top__title"><span>Three.js</span></h1>
+        <p class="top__subTitle">
+          <span>Test Page<br />For 3d Model</span>
+        </p>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<!-- セクションアニメーション -->
+<script>
+  import { gsap } from "gsap";
+  import { ScrollTrigger } from "gsap/ScrollTrigger";
+  gsap.registerPlugin(ScrollTrigger);
+
+  gsap.utils.toArray(`.fadeIn1`).forEach((target: any) => {
+    gsap.set(target, {
+      y: "100%",
+    });
+
+    gsap.fromTo(
+      target,
+      {
+        y: "100%",
+      },
+      {
+        y: 0,
+        ease: "power3.out",
+        delay: 0.2,
+        duration: 0.65,
+        scrollTrigger: {
+          trigger: target,
+          start: "top bottom",
+          toggleActions: "play none none none",
+          /* markers: true, */
+          once: true,
+        },
+      }
+    );
+  });
+
+  gsap.utils.toArray(`.fadeIn2`).forEach((target: any) => {
+    gsap.set(target, {
+      opacity: 0,
+      x: "100%",
+    });
+
+    gsap.fromTo(
+      target,
+      {
+        opacity: 0,
+        x: "100%",
+      },
+      {
+        opacity: 1,
+        x: 0,
+        ease: "power3.out",
+        delay: 0.2,
+        duration: 0.4,
+        scrollTrigger: {
+          trigger: target,
+          start: "top bottom-=10%",
+          toggleActions: "play none none none",
+          /* markers: true, */
+          once: true,
+        },
+      }
+    );
+  });
+</script>
+
+<!-- タイトルアニメーション -->
+<script>
+  import { $loadingAnimation } from "../store/loading";
+
+  // タイトル・サブタイトルを取得
+  const title = document.querySelectorAll<HTMLElement>(".top__title span");
+  const subTitle = document.querySelectorAll<HTMLElement>(
+    ".top__subTitle span"
+  );
+
+  // 状態の変更を監視
+  $loadingAnimation.subscribe((value) => {
+    // ローディングアニメーションの完了
+    if (value) {
+      title[0].classList.add("active");
+      subTitle[0].classList.add("active");
+
+      // ローディングアニメーション終了通知を初期化
+      $loadingAnimation.set(false);
+    }
+  });
+</script>
+
+<!-- canvasアニメーション -->
+<script>
+  /* three.js */
+  import * as THREE from "three";
+  import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+  import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+  import { VRM, VRMLoaderPlugin, VRMUtils } from "@pixiv/three-vrm";
+  import {
+    createVRMAnimationClip,
+    VRMAnimationLoaderPlugin,
+  } from "@pixiv/three-vrm-animation";
+  import { VRMSpringBoneManager } from "@pixiv/three-vrm-springbone";
+
+  /* user agent */
+  import { getDeviceType } from "../lib/userAgent";
+
+  /* nanostores */
+  import { $loadingModel, $loadingProgress } from "../store/loading";
+
+  // デバイスタイプをインスタンス化
+  const deviceType = getDeviceType();
+
+  // renderer
+  const renderer = new THREE.WebGLRenderer();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.setClearColor(0xffffff, 1.0);
+  document.body.appendChild(renderer.domElement);
+
+  // camera
+  const camera = new THREE.PerspectiveCamera(
+    30.0,
+    window.innerWidth / window.innerHeight,
+    0.1,
+    20.0
+  );
+
+  // pc spでの調整
+  if (deviceType == "Smartphone") {
+    camera.position.set(0.8, 1.15, 1.2);
+  } else {
+    camera.position.set(0.4, 1.15, 0.5);
+  }
+
+  // camera controls
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.screenSpacePanning = true;
+
+  // pc spでの調整
+  if (deviceType == "Smartphone") {
+    controls.target.set(-0.05, 0.9, 0.0);
+  } else {
+    controls.target.set(-0.15, 1.0, 0.0);
+  }
+
+  controls.update();
+
+  // scene
+  const scene = new THREE.Scene();
+
+  // light
+  const light = new THREE.DirectionalLight(0xffffff, 3);
+  light.position.set(1.0, 1.0, -1.0).normalize();
+  scene.add(light);
+
+  // gltf and vrm
+  let currentVrm: any = undefined;
+  let currentVrmAnimation: any = undefined;
+  let currentMixer: any = undefined;
+  const loader = new GLTFLoader();
+  loader.crossOrigin = "anonymous";
+
+  loader.register((parser) => {
+    return new VRMLoaderPlugin(parser);
+  });
+  loader.register((parser) => {
+    return new VRMAnimationLoaderPlugin(parser);
+  });
+
+  // オーディオクリップの初期化
+  function initAnimationClip() {
+    if (currentVrm && currentVrmAnimation) {
+      currentMixer = new THREE.AnimationMixer(currentVrm.scene);
+      const clip = createVRMAnimationClip(currentVrmAnimation, currentVrm);
+      currentMixer.clipAction(clip).play();
+    }
+  }
+
+  // Spring Boneの初期化（恐らくシーン全体...なので、読み込んでる.vrmのspringBoneもオールリセットされてるみたい。
+  let springBoneManager: any;
+
+  const initSpringBones = (vrm: any) => {
+    springBoneManager = new VRMSpringBoneManager();
+
+    // VRMモデルにSpringBoneManagerを設定
+    vrm.springBoneManager = springBoneManager;
+
+    // SpringBoneManagerにSpringBoneを追加
+    /* vrm.springBoneManager.joints.forEach((joint: any) => {
+      springBoneManager.addJoint(joint);
+      console.log("ok");
+    }); */
+  };
+
+  //　VRMモデルのロード
+  loader.load(
+    // モデルのパス
+    "/model/Sephira_v6.2/VRM/test",
+
+    // 処理
+    (gltf) => {
+      const vrm = gltf.userData.vrm;
+
+      // calling these functions greatly improves the performance
+      VRMUtils.removeUnnecessaryVertices(gltf.scene);
+      VRMUtils.removeUnnecessaryJoints(gltf.scene);
+
+      // Disable frustum culling
+      vrm.scene.traverse((obj: any) => {
+        obj.frustumCulled = false;
+      });
+
+      // pc spでの調整
+      if (deviceType == "Smartphone") {
+        initSpringBones(vrm);
+      } else {
+        // three.js用にバネボーンの値を調整（setオブジェクト）
+        vrm.springBoneManager.joints.forEach((bone: any) => {
+          // ボーンの法線変更
+          bone.bone.up = new THREE.Vector3(0, 1, 0);
+          // ボーンの重力法線変更
+          bone.settings.gravityDir = new THREE.Vector3(0, -1, 0);
+          // 重力系パラメータの調整
+          if (bone.bone.name == "NekomimiL" || bone.bone.name == "NekomimiR") {
+            vrm.springBoneManager.deleteJoint(bone);
+          } else {
+            bone.settings.gravityPower = 60;
+            bone.settings.gravity = 8.6;
+            bone.settings.dragForce = 0.4;
+          }
+        });
+      }
+
+      // 変数に格納
+      currentVrm = vrm;
+      // モデルの大きさを調整する
+      vrm.scene.scale.set(0.8, 0.8, 0.8);
+      // モデルの反転を合わせる
+      vrm.scene.rotation.y = Math.PI * 1.1;
+      // シーンに追加
+      scene.add(vrm.scene);
+      // オーディをクリップ初期化
+      initAnimationClip();
+      // loading storeを更新
+      $loadingModel.set(true);
+    },
+
+    // モデルのロード状況
+    (progress) => {
+      $loadingProgress.set(`${100.0 * (progress.loaded / progress.total)}%`);
+    }
+
+    // エラーハンドリング
+    /* (error) => console.error(error) */
+  );
+
+  // VRMアニメーションのロード
+  loader.load(
+    // アニメーションのパス
+    "/model/Sephira_v6.2/vrma/VRMA_01.vrma",
+
+    // 処理
+    (gltf) => {
+      const vrmAnimations = gltf.userData.vrmAnimations;
+
+      if (vrmAnimations == null) {
+        return;
+      }
+
+      currentVrmAnimation = vrmAnimations[0] ?? null;
+      console.log(currentVrmAnimation);
+      // オーディをクリップ初期化
+      initAnimationClip();
+    }
+  );
+
+  const onWindowResize = () => {
+    // 新しいアスペクト比を設定
+    const aspect = window.innerWidth / window.innerHeight;
+
+    // カメラのプロパティを更新
+    camera.aspect = aspect;
+    camera.updateProjectionMatrix();
+
+    // レンダラーのサイズを更新
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+  };
+
+  // リサイズイベント
+  window.addEventListener("resize", onWindowResize, false);
+
+  // animate
+  // クロックをインスタンス化
+  const clock = new THREE.Clock();
+  clock.start();
+  // ブレンドシェイプ用のタイマー変数を用意
+  let timer = 0;
+
+  function animate() {
+    requestAnimationFrame(animate);
+
+    /* ブレンドシェイプ補正値 */
+    timer += 0.028;
+
+    // VRMモデル更新
+    if (currentVrm && currentMixer) {
+      // ブレンドシェイプを指定（種類と時間軸）
+      currentVrm.expressionManager.setValue("blink", Math.sin(timer));
+      console.log(currentVrm.expressionManager);
+      // ブレンドシェイプの状態を更新
+      currentVrm.expressionManager.update();
+
+      // 目のアーマチュアを回転させて目線を変更
+      currentVrm.humanoid.getNormalizedBoneNode("rightEye").rotation.y =
+        Math.PI * 0.05;
+      currentVrm.humanoid.getNormalizedBoneNode("leftEye").rotation.y =
+        Math.PI * 0.05;
+
+      // アニメーションミキサー更新
+      currentMixer.update(clock.getDelta());
+      // モデルの状態を更新
+      currentVrm.update(clock.getDelta());
+    }
+
+    // レンダー
+    renderer.render(scene, camera);
+  }
+
+  animate();
+</script>

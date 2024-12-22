@@ -1,0 +1,148 @@
+@use "sass:math";
+@import "./variable";
+
+/* contents default width @contents = override */
+@mixin inner() {
+    width: 90%;
+    max-width: $contents-max-width;
+    margin: 0 auto;
+    @content;
+}
+
+/* 576px以下 */
+@mixin min-sm($max-width: $sm-width + 1px){
+    @media not screen and (min-width: $max-width){
+        @content;
+    }
+}
+
+/* 768px以下 */
+@mixin min-md($max-width: $md-width + 1px){
+    @media not screen and (min-width: $max-width){
+        @content;
+    }
+}
+
+/* 950px以下 */
+@mixin min-xl($max-width: $xl-width + 1px){
+    @media not screen and (min-width: $max-width){
+        @content;
+    }
+}
+
+/* 576px以上 */
+@mixin max-sm($min-width: $sm-width){
+    @media only screen and (min-width: $min-width){
+        @content;
+    }
+}
+
+/* 768px以上 */
+@mixin max-md($min-width: $md-width){
+    @media only screen and (min-width: $min-width){
+        @content;
+    }
+}
+
+/* 950px以上 */
+@mixin max-xl($min-width: $xl-width){
+    @media only screen and (min-width: $min-width){
+        @content;
+    }
+}
+
+/* デザインカンプの幅以上 */
+@mixin max-large($min-width: $large-width){
+    @media only screen and (min-width: $min-width){
+        @content;
+    }
+}
+
+/* 縦書き */
+@mixin rl() {
+    -webkit-writing-mode: vertical-rl;
+    -ms-writing-mode: tb-rl;
+    writing-mode: vertical-rl;
+    @content;
+}
+
+/* button reset */
+@mixin btnReset {
+    background: none;
+    appearance: none;
+    border: none;
+    user-select: none;
+    outline: none;
+
+    svg{
+        vertical-align: top;
+    }
+
+    @content;
+}
+
+/* data属性での表示・表示切り替え */
+[data-madia="sp"] {
+    @include min-md{
+        display: none;
+    }
+}
+
+[data-madia="pc"] {
+    @include max-md{
+        display: none;
+    }
+}
+
+/* default modal style */
+@mixin modalContainer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 999;
+    display: flex;
+    width: 100%;
+    height: 100%;
+    overflow: hidden auto;
+    background: rgba(#000, 0.8);
+    @include customScrollBar();
+    @content;
+}
+
+/* scrollbar custom */
+@mixin customScrollBar {
+    &::-webkit-scrollbar{
+        position: relative;
+        width: 5px;
+        display: block;
+    }
+
+    &::-webkit-scrollbar-track{
+        background: #ccc;
+        border-radius: 2.5px;
+    }
+
+    &::-webkit-scrollbar-thumb{
+        background: #ababab;
+        border-radius: 2.5px;
+        cursor: pointer;
+    }
+}
+
+/* テキスト表示制限（※非表示以降は … になる） */
+@mixin lineClamp($count: 3){
+    @if type-of($count) != "number" {
+        @error '数値以外はエラーになります。';
+    }
+
+    @if $count == 1{
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    } @else {
+        display: -webkit-box;
+        -webkit-line-clamp: $count;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+}
